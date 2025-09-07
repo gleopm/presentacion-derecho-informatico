@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protección de Programas de Cómputo</title>
+    <style>
+        /* Reset y configuración base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0A0E27;
+            color: white;
+            overflow: hidden;
+        }
+
+        /* Contenedor principal */
+        .presentation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Barra de progreso */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0066FF, #00FFFF, #00FF41);
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        }
+
+        /* Controles de navegación */
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 30px;
+            border-radius: 50px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .nav-btn {
+            background: linear-gradient(45deg, #0066FF, #00FFFF);
+            border: none;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.3rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 102, 255, 0.4);
+        }
+
+        .nav-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.6);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+
+        .slide-counter {
+            color: #00FFFF;
+            font-weight: 700;
+            background: rgba(0, 255, 255, 0.1);
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 1rem;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        /* Contenedor de slides */
+        .slides-wrapper {
+            display: flex;
+            width: 1100vw; /* 11 slides × 100vw */
+            height: 100vh;
+            transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            padding: 40px 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Fondos animados */
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(0,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(10px, 10px); }
+        }
+
+        /* Colores específicos por slide */
+        .slide-1 { background: linear-gradient(135deg, #0A0E27 0%, #1A1B3A 50%, #2D1B69 100%); }
+        .slide-2 { background: linear-gradient(135deg, #0B2447 0%, #19376D 50%, #576CBC 100%); }
+        .slide-3 { background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 50%, #60A5FA 100%); }
+        .slide-4 { background: linear-gradient(135deg, #064E3B 0%, #059669 50%, #34D399 100%); }
+        .slide-5 { background: linear-gradient(135deg, #7C2D12 0%, #DC2626 50%, #F87171 100%); }
+        .slide-6 { background: linear-gradient(135deg, #581C87 0%, #7C3AED 50%, #A78BFA 100%); }
+        .slide-7 { background: linear-gradient(135deg, #92400E 0%, #D97706 50%, #FBBF24 100%); }
+        .slide-8 { background: linear-gradient(135deg, #B91C1C 0%, #EF4444 50%, #FCA5A5 100%); }
+        .slide-9 { background: linear-gradient(135deg, #BE123C 0%, #F43F5E 50%, #FDA4AF 100%); }
+        .slide-10 { background: linear-gradient(135deg, #166534 0%, #16A34A 50%, #86EFAC 100%); }
+        .slide-11 { background: linear-gradient(135deg, #0A0E27 0%, #1A1B3A 50%, #2D1B69 100%); }
+
+        /* Tipografía */
+        .main-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            margin-bottom: 30px;
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+            background: linear-gradient(45deg, #00FFFF, #0066FF, #00FF41);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: slideInFromTop 1s ease-out;
+            text-align: center;
+            line-height: 1.1;
+        }
+
+        .slide-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 40px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            background: linear-gradient(45deg, #00FFFF, #0066FF, #00FF41);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: slideInFromTop 1s ease-out;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            font-size: 2rem;
+            margin-bottom: 50px;
+            text-align: center;
+            color: #00FFFF;
+            opacity: 0.9;
+            animation: slideInFromBottom 1s ease-out 0.3s both;
+        }
+
+        /* Layouts de contenido */
+        .content-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            max-width: 1400px;
+            width: 100%;
+            animation: slideInFromBottom 0.8s ease-out 0.4s both;
+        }
+
+        .content-left, .content-right {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Tarjetas de contenido */
+        .content-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .content-card:hover::before {
+            left: 100%;
+        }
+
+        .content-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 255, 255, 0.6);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+        }
+
+        .card-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #00FFFF;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #0066FF, #00FFFF);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 102, 255, 0.4);
+        }
+
+        .card-content {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .highlight {
+            color: #00FF41;
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        /* Listas de puntos clave */
+        .key-points {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .key-points li {
+            margin: 15px 0;
+            padding-left: 30px;
+            position: relative;
+            font-size: 1.1rem;
+        }
+
+        .key-points li::before {
+            content: '▶';
+            position: absolute;
+            left: 0;
+            color: #00FFFF;
+            font-weight: bold;
+        }
+
+        /* Contenedores de imágenes */
+        .image-container {
+            width: 100%;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            border: 2px dashed rgba(0, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .image-container.large-image {
+            max-width: 800px;
+            margin: 30px auto;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 13px;
+        }
+
+        /* Sección de equipo */
+        .team-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 1000px;
+            width: 100%;
+            margin-top: 40px;
+            animation: slideInFromBottom 1s ease-out 0.6s both;
+        }
+
+        .team-member {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .team-member:hover {
+            transform: translateY(-10px);
+            border-color: rgba(0, 255, 255, 0.8);
+            box-shadow: 0 20px 40px rgba(0, 255, 255, 0.3);
+        }
+
+        .member-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #0066FF, #00FFFF);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+            box-shadow: 0 8px 25px rgba(0, 102, 255, 0.4);
+        }
+
+        .team-member h3 {
+            color: #00FFFF;
+            margin-bottom: 10px;
+        }
+
+        /* Grid de estadísticas */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            max-width: 1000px;
+            width: 100%;
+            margin: 30px 0;
+            animation: slideInFromBottom 0.8s ease-out 0.3s both;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: scale(1.05);
+            border-color: rgba(0, 255, 255, 0.8);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #00FF41;
+            display: block;
+            text-shadow: 0 0 20px rgba(0, 255, 65, 0.8);
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-top: 10px;
+            color: #00FFFF;
+        }
+
+        /* Grid de ejemplos */
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+            margin: 30px 0;
+        }
+
+        .example-item {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .example-item:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 255, 255, 0.8);
+        }
+
+        .example-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #0066FF, #00FFFF);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 1.5rem;
+        }
+
+        .example-item h4 {
+            color: #00FFFF;
+            margin-bottom: 10px;
+        }
+
+        /* Elementos flotantes */
+        .floating-element {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .floating-element:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+        .floating-element:nth-child(2) { top: 20%; right: 10%; animation-delay: 2s; }
+        .floating-element:nth-child(3) { bottom: 20%; left: 15%; animation-delay: 4s; }
+        .floating-element:nth-child(4) { bottom: 10%; right: 15%; animation-delay: 1s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        /* Animaciones */
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInFromBottom {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInFromLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInFromRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .slide {
+                padding: 20px;
+            }
+            
+            .main-title {
+                font-size: 2.5rem;
+            }
+            
+            .slide-title {
+                font-size: 2rem;
+            }
+            
+            .content-container {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .team-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .examples-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .controls {
+                padding: 10px 20px;
+                gap: 15px;
+            }
+            
+            .nav-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .slide {
+                padding: 15px;
+            }
+            
+            .main-title {
+                font-size: 2rem;
+            }
+            
+            .slide-title {
+                font-size: 1.5rem;
+            }
+            
+            .examples-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Bar -->
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="presentation-container">
+        <!-- Floating Elements -->
+        <div class="floating-element" style="font-size: 3rem;">🔒</div>
+        <div class="floating-element" style="font-size: 2.5rem;">💻</div>
+        <div class="floating-element" style="font-size: 3.5rem;">⚡</div>
+        <div class="floating-element" style="font-size: 2rem;">🛡️</div>
+
+        <!-- Slides Wrapper -->
+        <div class="slides-wrapper" id="slidesWrapper">
+            
+            <!-- Slide 1: Portada -->
+            <div class="slide slide-1">
+                <h1 class="main-title">PROTECCIÓN DE PROGRAMAS DE CÓMPUTO</h1>
+                <p class="subtitle">Derecho Informático - Análisis Legal y Técnico</p>
+                
+                <div class="image-container">
+                    <img src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Seguridad Digital">
+                </div>
+                
+                <div class="team-container">
+                    <div class="team-member">
+                        <div class="member-icon">⚖️</div>
+                        <h3>Expositor 1</h3>
+                        <p>Marco Legal y Fundamentos</p>
+                    </div>
+                    
+                    <div class="team-member">
+                        <div class="member-icon">🔒</div>
+                        <h3>Expositor 2</h3>
+                        <p>Tipos de Protección y Mecanismos</p>
+                    </div>
+                    
+                    <div class="team-member">
+                        <div class="member-icon">⚠️</div>
+                        <h3>Expositor 3</h3>
+                        <p>Vulnerabilidades y Desafíos</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2: Definición -->
+            <div class="slide slide-2">
+                <h2 class="slide-title">¿QUÉ SON LOS PROGRAMAS DE CÓMPUTO?</h2>
+                
+                <div class="content-container">
+                    <div class="content-left">
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">📋</span>
+                                Definición Legal
+                            </h3>
+                            <div class="card-content">
+                                <p><span class="highlight">"Conjuntos de instrucciones expresadas mediante palabras, códigos, planes o en cualquier otra forma"</span> que permiten a una máquina realizar tareas específicas.</p>
+                                <br>
+                                <p><strong>Fuente:</strong> OMPI (2020)</p>
+                            </div>
+                        </div>
+                        
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🎯</span>
+                                Características Clave
+                            </h3>
+                            <ul class="key-points">
+                                <li>Expresiones creativas</li>
+                                <li>Invenciones técnicas</li>
+                                <li>Activos intelectuales</li>
+                                <li>Valor económico estratégico</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="content-right">
+                        <div class="image-container">
+                            <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Código de Programación">
+                        </div>
+                        
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🔍</span>
+                                Naturaleza Dual
+                            </h3>
+                            <div class="card-content">
+                                <p>Los programas son <span class="highlight">simultáneamente</span>:</p>
+                                <br>
+                                <p>• <strong>Obras creativas</strong> (derechos de autor)</p>
+                                <p>• <strong>Invenciones técnicas</strong> (patentes potenciales)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3: Ejemplos -->
+            <div class="slide slide-3">
+                <h2 class="slide-title">EJEMPLOS DE PROGRAMAS DE CÓMPUTO</h2>
+                
+                <div class="examples-grid">
+                    <div class="example-item">
+                        <div class="example-icon">📄</div>
+                        <h4>Microsoft Office</h4>
+                        <p>Suite ofimática</p>
+                    </div>
+                    
+                    <div class="example-item">
+                        <div class="example-icon">🎨</div>
+                        <h4>Adobe Photoshop</h4>
+                        <p>Edición de imágenes</p>
+                    </div>
+                    
+                    <div class="example-item">
+                        <div class="example-icon">🖥️</div>
+                        <h4>Windows/macOS</h4>
+                        <p>Sistemas operativos</p>
+                    </div>
+                    
+                    <div class="example-item">
+                        <div class="example-icon">🎮</div>
+                        <h4>Videojuegos</h4>
+                        <p>Entretenimiento digital</p>
+                    </div>
+                    
+                    <div class="example-item">
+                        <div class="example-icon">🌐</div>
+                        <h4>Navegadores Web</h4>
+                        <p>Chrome, Firefox, Safari</p>
+                    </div>
+                    
+                    <div class="example-item">
+                        <div class="example-icon">📱</div>
+                        <h4>Apps Móviles</h4>
+                        <p>WhatsApp, Instagram</p>
+                    </div>
+                    
+                    <div class="example-item">
+                        <div class="example-icon">🏦</div>
+                        <h4>Software Empresarial</h4>
+                        <p>SAP, Oracle, CRM</p>
+                    </div>
+                    
+                    <div class="example-item">
+                        <div class="example-icon">🔧</div>
+                        <h4>Herramientas Dev</h4>
+                        <p>Visual Studio, Git</p>
+                    </div>
+                </div>
+                
+                <div class="image-container large-image">
+                    <img src="https://starkcloud.com/wp-content/uploads/2024/12/La-tecnologia-del-futuro-5-avances-que-cambiaran-el-mundo-2000x1200-1.jpg" alt="Tecnología y Software">
+                </div>
+            </div>
+
+            <!-- Slide 4: Importancia -->
+            <div class="slide slide-4">
+                <h2 class="slide-title">¿POR QUÉ ES IMPORTANTE PROTEGER EL SOFTWARE?</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-number">68%</span>
+                        <span class="stat-label">Tasa de piratería en Perú</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">$52B</span>
+                        <span class="stat-label">Pérdidas globales anuales</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">72%</span>
+                        <span class="stat-label">Víctimas de fraude por piratería</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">26.2%</span>
+                        <span class="stat-label">Software en medios pirateados</span>
+                    </div>
+                </div>
+                
+                <div class="content-container">
+                    <div class="content-left">
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🛡️</span>
+                                Razones Fundamentales
+                            </h3>
+                            <ul class="key-points">
+                                <li><span class="highlight">Seguridad nacional</span> y estabilidad digital</li>
+                                <li><span class="highlight">Desarrollo tecnológico</span> sostenible</li>
+                                <li><span class="highlight">Competitividad empresarial</span> global</li>
+                                <li><span class="highlight">Protección de innovación</span> y creatividad</li>
+                                <li><span class="highlight">Incentivos económicos</span> para desarrolladores</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">⚠️</span>
+                                Riesgos del Software Pirata
+                            </h3>
+                            <ul class="key-points">
+                                <li>Malware y virus ocultos</li>
+                                <li>Falta de actualizaciones de seguridad</li>
+                                <li>Ausencia de soporte técnico</li>
+                                <li>Problemas de compatibilidad</li>
+                                <li>Consecuencias legales graves</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="content-right">
+                        <div class="image-container">
+                            <img src="https://images.unsplash.com/photo-1563206767-5b18f218e8de?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Ciberseguridad">
+                        </div>
+                        
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🎯</span>
+                                Ejemplo Práctico
+                            </h3>
+                            <div class="card-content">
+                                <p><strong>Caso:</strong> Empresa usa Office pirateado</p>
+                                <br>
+                                <p><span class="highlight">Consecuencias:</span></p>
+                                <p>• Multa de hasta $150,000 por violación</p>
+                                <p>• Demanda legal de Microsoft</p>
+                                <p>• Infección por malware</p>
+                                <p>• Pérdida de datos empresariales</p>
+                                <p>• Daño reputacional</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 5: Marco Legal Parte 1 (2.1 y 2.2) -->
+            <div class="slide slide-5">
+                <h2 class="slide-title">MARCO LEGAL - DERECHOS DE AUTOR Y PATENTES</h2>
+                
+                <div class="content-container">
+                    <div class="content-left">
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">📜</span>
+                                2.1 Derechos de Autor
+                            </h3>
+                            <div class="card-content">
+                                <p><span class="highlight">Decreto Legislativo N° 822</span></p>
+                                <p>"Los programas de ordenador se protegen en los mismos términos que las obras literarias"</p>
+                                <br>
+                                <ul class="key-points">
+                                    <li><strong>Protección automática</strong> al crear el código</li>
+                                    <li><strong>Código fuente y objeto</strong> protegidos</li>
+                                    <li><strong>Convenio de Berna</strong> - estándar internacional</li>
+                                    <li><strong>Acuerdo ADPIC</strong> - comercio global</li>
+                                    <li><strong>IA sin autor humano</strong> NO protegida (2023)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="image-container">
+                            <img src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Documentos Legales">
+                        </div>
+                    </div>
+                    
+                    <div class="content-right">
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">⚖️</span>
+                                2.2 Patentes de Software
+                            </h3>
+                            <div class="card-content">
+                                <p><span class="highlight">Decisión 486 - Comunidad Andina</span></p>
+                                <p>"Los programas de ordenador o el soporte lógico, <strong>como tal</strong>" NO son patentables</p>
+                                <br>
+                                <ul class="key-points">
+                                    <li><strong>Perú:</strong> NO patenta software puro</li>
+                                    <li><strong>SÍ patentable:</strong> como parte de sistemas técnicos</li>
+                                    <li><strong>EEUU:</strong> 20 años para innovaciones genuinas</li>
+                                    <li><strong>Europa:</strong> "efecto técnico adicional"</li>
+                                    <li><strong>63%</strong> de patentes US relacionadas con software</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🔍</span>
+                                Comparación de Enfoques
+                            </h3>
+                            <div class="card-content">
+                                <div style="display: flex; justify-content: space-between; margin: 15px 0;">
+                                    <div style="text-align: center;">
+                                        <div style="background: #FF6B35; padding: 10px; border-radius: 8px; margin-bottom: 8px;">
+                                            <strong>Perú</strong>
+                                        </div>
+                                        <span>Restrictivo</span>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div style="background: #00FFFF; color: black; padding: 10px; border-radius: 8px; margin-bottom: 8px;">
+                                            <strong>Europa</strong>
+                                        </div>
+                                        <span>Intermedio</span>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div style="background: #00FF41; color: black; padding: 10px; border-radius: 8px; margin-bottom: 8px;">
+                                            <strong>EEUU</strong>
+                                        </div>
+                                        <span>Híbrido</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 6: Marco Legal Parte 2 -->
+            <div class="slide slide-6">
+                <h2 class="slide-title">MARCO LEGAL - SECRETOS Y COMPARACIONES</h2>
+                
+                <div class="content-container">
+                    <div class="content-left">
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🤐</span>
+                                2.3 Secretos Comerciales
+                            </h3>
+                            <div class="card-content">
+                                <p><span class="highlight">Ley N° 30507 - Secretos Empresariales</span></p>
+                                <br>
+                                <ul class="key-points">
+                                    <li><strong>Protección indefinida</strong> vs. 20 años patentes</li>
+                                    <li><strong>Ideal para IA</strong> y computación en nube</li>
+                                    <li><strong>Algoritmos propietarios</strong> y código fuente</li>
+                                    <li><strong>Medidas razonables</strong> de confidencialidad</li>
+                                    <li><strong>Valor económico</strong> por no ser conocido</li>
+                                </ul>
+                                <br>
+                                <p><span class="highlight">Ventaja clave:</span> El software nunca sale de los servidores del proveedor (SaaS)</p>
+                            </div>
+                        </div>
+                        
+                        <div class="image-container">
+                            <img src="https://images.unsplash.com/photo-1614064641938-3bbee52942c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Confidencialidad">
+                        </div>
+                    </div>
+                    
+                    <div class="content-right">
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🌍</span>
+                                2.4 Comparación Internacional
+                            </h3>
+                            <div class="card-content">
+                                <ul class="key-points">
+                                    <li><span class="highlight">Perú:</span> Modelo continental europeo</li>
+                                    <li><span class="highlight">EEUU:</span> Sistema híbrido más permisivo</li>
+                                    <li><span class="highlight">TLC Perú-EEUU:</span> Armoniza estándares</li>
+                                    <li><span class="highlight">Enforcement:</span> Principal desafío peruano</li>
+                                    <li><span class="highlight">Lista de Observación:</span> USTR 2022</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🚀</span>
+                                Desarrollos 2024
+                            </h3>
+                            <div class="card-content">
+                                <ul class="key-points">
+                                    <li><span class="highlight">Acta Resiliencia Cibernética UE:</span> Nuevos estándares</li>
+                                    <li><span class="highlight">Directiva NIS2:</span> Ciberseguridad reforzada</li>
+                                    <li><span class="highlight">Enforcement agresivo:</span> FTC más activa</li>
+                                    <li><span class="highlight">Estrategia multicapa:</span> Más efectiva</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="image-container">
+                            <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Globalización Digital">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 7: Protección Técnica -->
+            <div class="slide slide-7">
+                <h2 class="slide-title">TIPOS DE PROTECCIÓN - TÉCNICA Y LEGAL</h2>
+                
+                <div class="content-container">
+                    <div class="content-left">
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🔐</span>
+                                3.1 Protección Técnica (DRM)
+                            </h3>
+                            <div class="card-content">
+                                <ul class="key-points">
+                                    <li><span class="highlight">Sistemas de activación:</span> Office, Adobe Creative</li>
+                                    <li><span class="highlight">Licencias digitales:</span> Steam, Epic Games</li>
+                                    <li><span class="highlight">Cifrado y autenticación:</span> Tokens únicos</li>
+                                    <li><span class="highlight">Validación periódica:</span> Conexión a servidores</li>
+                                    <li><span class="highlight">Acta Resiliencia Cibernética UE:</span> Nuevos requisitos</li>
+                                </ul>
+                                <br>
+                                <p><span class="highlight">Limitación:</span> 3.2B visitas a sitios piratería (2024)</p>
+                            </div>
+                        </div>
+                        
+                        <div class="image-container">
+                            <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Sistemas DRM">
+                        </div>
+                    </div>
+                    
+                    <div class="content-right">
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">📋</span>
+                                3.2 Protección Legal
+                            </h3>
+                            <div class="card-content">
+                                <ul class="key-points">
+                                    <li><span class="highlight">DMCA:</span> Sistema "notificación y retirada"</li>
+                                    <li><span class="highlight">Art. 192-A DL 822:</span> Sanciona elusión tecnológica</li>
+                                    <li><span class="highlight">Ley N° 30096:</span> Delitos Informáticos</li>
+                                    <li><span class="highlight">Directiva NIS2:</span> Estándares EU 2024</li>
+                                    <li><span class="highlight">Enforcement automatizado:</span> Detección masiva</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">⚡</span>
+                                Proceso DMCA
+                            </h3>
+                            <div class="card-content">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin: 15px 0;">
+                                    <div style="background: #0066FF; padding: 8px; border-radius: 6px; flex: 1; margin: 0 3px; text-align: center; font-size: 0.9rem;">
+                                        <strong>Detección</strong>
+                                    </div>
+                                    <div style="color: #00FFFF;">→</div>
+                                    <div style="background: #00FFFF; color: black; padding: 8px; border-radius: 6px; flex: 1; margin: 0 3px; text-align: center; font-size: 0.9rem;">
+                                        <strong>Notificación</strong>
+                                    </div>
+                                    <div style="color: #00FFFF;">→</div>
+                                    <div style="background: #00FF41; color: black; padding: 8px; border-radius: 6px; flex: 1; margin: 0 3px; text-align: center; font-size: 0.9rem;">
+                                        <strong>Retirada</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="image-container">
+                            <img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Documentos Legales">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 8: Contratos y Anti-Piratería -->
+            <div class="slide slide-8">
+                <h2 class="slide-title">TIPOS DE PROTECCIÓN - CONTRATOS Y ANTI-PIRATERÍA</h2>
+                
+                <div class="content-container">
+                    <div class="content-left">
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">📄</span>
+                                3.3 Contratos y Licencias
+                            </h3>
+                            <div class="card-content">
+                                <ul class="key-points">
+                                    <li><span class="highlight">Modelos SaaS:</span> Mayor control del proveedor</li>
+                                    <li><span class="highlight">Suscripciones:</span> Adobe CC, Microsoft 365</li>
+                                    <li><span class="highlight">Plataformas cerradas:</span> App Store, Google Play</li>
+                                    <li><span class="highlight">Términos específicos:</span> Uso, instalación, territorios</li>
+                                    <li><span class="highlight">Complejidades IA:</span> Datos, resultados, responsabilidad</li>
+                                </ul>
+                                <br>
+                                <p><span class="highlight">Ventaja clave:</span> Flexibilidad contractual y control continuo</p>
+                            </div>
+                        </div>
+                        
+                        <div class="image-container">
+                            <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Contratos Digitales">
+                        </div>
+                    </div>
+                    
+                    <div class="content-right">
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🛡️</span>
+                                3.4 Medidas Anti-Piratería
+                            </h3>
+                            <div class="card-content">
+                                <ul class="key-points">
+                                    <li><span class="highlight">$4.2B generados</span> desde 2010 por programas cumplimiento</li>
+                                    <li><span class="highlight">Telemetría avanzada:</span> Análisis patrones de uso</li>
+                                    <li><span class="highlight">Machine Learning:</span> Detección distribución ilícita</li>
+                                    <li><span class="highlight">Estrategias regionales:</span> Enfoques diferenciados</li>
+                                    <li><span class="highlight">Conversión proactiva:</span> Piratas → clientes legítimos</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🔄</span>
+                                Proceso Anti-Piratería
+                            </h3>
+                            <div class="card-content">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin: 15px 0;">
+                                    <div style="background: #0066FF; padding: 10px; border-radius: 8px; flex: 1; margin: 0 5px; text-align: center;">
+                                        <strong>Detección</strong>
+                                    </div>
+                                    <div style="color: #00FFFF;">→</div>
+                                    <div style="background: #00FFFF; color: black; padding: 10px; border-radius: 8px; flex: 1; margin: 0 5px; text-align: center;">
+                                        <strong>Análisis</strong>
+                                    </div>
+                                    <div style="color: #00FFFF;">→</div>
+                                    <div style="background: #00FF41; color: black; padding: 10px; border-radius: 8px; flex: 1; margin: 0 5px; text-align: center;">
+                                        <strong>Conversión</strong>
+                                    </div>
+                                </div>
+                                <p style="text-align: center; margin-top: 15px;"><span class="highlight">$18.7B</span> oportunidad global estimada</p>
+                            </div>
+                        </div>
+                        
+                        <div class="image-container">
+                            <img src="https://images.unsplash.com/photo-1551650975-87deedd944c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Anti-Piratería">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 9: Vulnerabilidades -->
+            <div class="slide slide-9">
+                <h2 class="slide-title">VULNERABILIDADES - TÉCNICAS Y ECONÓMICAS</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-number">99%</span>
+                        <span class="stat-label">Ataques basados en contraseñas</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">1.25M</span>
+                        <span class="stat-label">Ataques DDoS mitigados H2 2024</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">600M</span>
+                        <span class="stat-label">Ataques de identidad diarios</span>
+                    </div>
+                </div>
+                
+                <div class="content-container">
+                    <div class="content-left">
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">⚠️</span>
+                                4.1 Vulnerabilidades Técnicas
+                            </h3>
+                            <div class="card-content">
+                                <ul class="key-points">
+                                    <li><span class="highlight">Ataques identidad:</span> 7K/segundo bloqueados</li>
+                                    <li><span class="highlight">Cadena suministro:</span> Caso SolarWinds</li>
+                                    <li><span class="highlight">IA como amenaza:</span> Phishing, deepfakes</li>
+                                    <li><span class="highlight">DRM vulnerabilidades:</span> Replay, virtualización</li>
+                                    <li><span class="highlight">Ataques aplicación:</span> Más sigilosos y sofisticados</li>
+                                </ul>
+                                <br>
+                                <p><span class="highlight">Tendencia:</span> Brecha entre organizaciones seguras e inseguras se amplía</p>
+                            </div>
+                        </div>
+                        
+                        <div class="image-container">
+                            <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Ciberataques">
+                        </div>
+                    </div>
+                    
+                    <div class="content-right">
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">💰</span>
+                                4.2 Impacto Económico en Perú
+                            </h3>
+                            <div class="card-content">
+                                <ul class="key-points">
+                                    <li><span class="highlight">75% cambiaría</span> a software legal si fuera más barato</li>
+                                    <li><span class="highlight">Costos ocultos:</span> Falta soporte, vulnerabilidades</li>
+                                    <li><span class="highlight">72% experimenta fraude</span> en compras piratería</li>
+                                    <li><span class="highlight">Riesgos operacionales:</span> Malware, inactividad</li>
+                                    <li><span class="highlight">Factores estructurales:</span> Precios, cultura, acceso</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">📊</span>
+                                Realidad Peruana
+                            </h3>
+                            <div class="card-content">
+                                <p><span class="highlight">Desafíos específicos:</span></p>
+                                <br>
+                                <p>• <strong>Socioeconómicos:</strong> Poder adquisitivo limitado</p>
+                                <p>• <strong>Culturales:</strong> Normalización de la piratería</p>
+                                <p>• <strong>Tecnológicos:</strong> Fácil acceso a software pirateado</p>
+                                <p>• <strong>Legales:</strong> Enforcement insuficiente</p>
+                                <br>
+                                <p><span class="highlight">Necesidad:</span> Estrategias diferenciadas para mercados emergentes</p>
+                            </div>
+                        </div>
+                        
+                        <div class="image-container">
+                            <img src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Impacto Económico">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 10: Ingeniería Inversa -->
+            <div class="slide slide-10">
+                <h2 class="slide-title">VULNERABILIDADES - INGENIERÍA INVERSA Y ENFORCEMENT</h2>
+                
+                <div class="content-container">
+                    <div class="content-left">
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🔍</span>
+                                4.3 Ingeniería Inversa
+                            </h3>
+                            <div class="card-content">
+                                <ul class="key-points">
+                                    <li><span class="highlight">Art. 42 DL 822:</span> Permite interoperabilidad</li>
+                                    <li><span class="highlight">Herramientas IA:</span> Democratizan el proceso</li>
+                                    <li><span class="highlight">Línea difusa:</span> Legítimo vs. violación</li>
+                                    <li><span class="highlight">Automatización:</span> Análisis masivo de código</li>
+                                    <li><span class="highlight">Desafíos evidencia:</span> Difícil probar infracción</li>
+                                </ul>
+                                <br>
+                                <p><span class="highlight">Evolución:</span> De herramientas especializadas a acceso democratizado</p>
+                            </div>
+                        </div>
+                        
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🤖</span>
+                                Nuevas Amenazas IA
+                            </h3>
+                            <div class="card-content">
+                                <p><span class="highlight">Capacidades emergentes:</span></p>
+                                <br>
+                                <p>• <strong>Análisis automático:</strong> Patrones de código</p>
+                                <p>• <strong>Extracción lógica:</strong> Algoritmos subyacentes</p>
+                                <p>• <strong>Recreación funcional:</strong> Sin acceso al fuente</p>
+                                <p>• <strong>Identificación IP:</strong> Valor comercial central</p>
+                            </div>
+                        </div>
+                        
+                        <div class="image-container">
+                            <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Ingeniería Inversa">
+                        </div>
+                    </div>
+                    
+                    <div class="content-right">
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">⚖️</span>
+                                4.4 Retos de Enforcement
+                            </h3>
+                            <div class="card-content">
+                                <ul class="key-points">
+                                    <li><span class="highlight">Jurisdicción:</span> Operaciones transfronterizas</li>
+                                    <li><span class="highlight">Velocidad:</span> Tecnología > marcos legales</li>
+                                    <li><span class="highlight">Costos prohibitivos:</span> Litigation compleja</li>
+                                    <li><span class="highlight">Cloud computing:</span> Nuevas complejidades</li>
+                                    <li><span class="highlight">Distribución geográfica:</span> CDN y proxies</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🌐</span>
+                                Desafíos Globales
+                            </h3>
+                            <div class="card-content">
+                                <p><span class="highlight">Problemas estructurales:</span></p>
+                                <br>
+                                <p>• <strong>Múltiples jurisdicciones:</strong> Marcos legales diferentes</p>
+                                <p>• <strong>Servidores distribuidos:</strong> Ubicaciones oscurecidas</p>
+                                <p>• <strong>Cooperación limitada:</strong> Países con IP débil</p>
+                                <p>• <strong>Evolución rápida:</strong> Nuevos métodos distribución</p>
+                                <br>
+                                <p><span class="highlight">Solución:</span> Coordinación internacional sin precedentes</p>
+                            </div>
+                        </div>
+                        
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">💡</span>
+                                Enfoques Alternativos
+                            </h3>
+                            <div class="card-content">
+                                <p><span class="highlight">Estrategias innovadoras:</span></p>
+                                <br>
+                                <p>• <strong>Programas amnistía:</strong> Regularización sin penalización</p>
+                                <p>• <strong>Educación proactiva:</strong> Beneficios software legítimo</p>
+                                <p>• <strong>Incentivos económicos:</strong> Pricing diferenciado</p>
+                                <p>• <strong>Cumplimiento preventivo:</strong> Antes que punitivo</p>
+                            </div>
+                        </div>
+                        
+                        <div class="image-container">
+                            <img src="https://images.unsplash.com/photo-1505142468610-359e7d316be0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Desafíos Legales">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 11: Conclusiones -->
+            <div class="slide slide-11">
+                <h2 class="slide-title">CONCLUSIONES</h2>
+                
+                <div class="content-container">
+                    <div class="content-left">
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🎯</span>
+                                Enfoque Integral
+                            </h3>
+                            <div class="card-content">
+                                <p>La protección de software requiere <span class="highlight">estrategias multicapa</span> que combinen derechos de autor, secretos comerciales, medidas técnicas y contratos sofisticados.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🇵🇪</span>
+                                Contexto Peruano
+                            </h3>
+                            <div class="card-content">
+                                <p>Perú necesita fortalecer <span class="highlight">enforcement y capacidades técnicas</span> especializadas, además de estrategias de pricing diferenciadas.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🌐</span>
+                                Estándares Globales
+                            </h3>
+                            <div class="card-content">
+                                <p>Los desarrollos de 2024 (Acta de Resiliencia Cibernética UE, NIS2) establecen <span class="highlight">nuevos estándares</span> que Perú debe considerar.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-right">
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">🚀</span>
+                                Futuro Tecnológico
+                            </h3>
+                            <div class="card-content">
+                                <p>IA, blockchain y computación cuántica requerirán <span class="highlight">marcos legales completamente nuevos</span> y enfoques adaptativos.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">📚</span>
+                                Educación y Cultura
+                            </h3>
+                            <div class="card-content">
+                                <p>La <span class="highlight">concienciación sobre PI</span> es fundamental para crear ecosistemas digitales sostenibles.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="content-card">
+                            <h3 class="card-title">
+                                <span class="card-icon">⚖️</span>
+                                Equilibrio Necesario
+                            </h3>
+                            <div class="card-content">
+                                <p>El éxito depende del <span class="highlight">equilibrio entre derechos de desarrolladores</span> y necesidades de usuarios.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-card" style="max-width: 1000px; margin: 40px auto; text-align: center;">
+                    <h3 class="card-title" style="justify-content: center;">
+                        <span class="card-icon">💡</span>
+                        Mensaje Final
+                    </h3>
+                    <div class="card-content">
+                        <p style="font-size: 1.4rem; line-height: 1.6;">
+                            <span class="highlight">La protección efectiva de programas de cómputo no es un obstáculo sino un facilitador de la innovación</span>, 
+                            que contribuye al desarrollo sostenible del sector tecnológico y fortalece la competitividad nacional en la economía digital.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="image-container large-image">
+                    <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Futuro Digital">
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="controls">
+        <button class="nav-btn" id="prevBtn">◀</button>
+        <div class="slide-counter">
+            <span id="currentSlide">1</span> / <span id="totalSlides">11</span>
+        </div>
+        <button class="nav-btn" id="nextBtn">▶</button>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentSlideIndex = 0;
+        const totalSlides = 11;
+
+        // Función principal para actualizar la presentación
+        function updatePresentation() {
+            const slidesWrapper = document.getElementById('slidesWrapper');
+            const progressFill = document.getElementById('progressFill');
+            const currentSlideSpan = document.getElementById('currentSlide');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            // Verificar que los elementos existen
+            if (!slidesWrapper || !progressFill || !currentSlideSpan || !prevBtn || !nextBtn) {
+                console.error('Elementos de la presentación no encontrados');
+                return;
+            }
+            
+            // Mover slides
+            const translateX = -currentSlideIndex * 100;
+            slidesWrapper.style.transform = `translateX(${translateX}vw)`;
+            
+            // Actualizar barra de progreso
+            const progress = (currentSlideIndex / (totalSlides - 1)) * 100;
+            progressFill.style.width = `${progress}%`;
+            
+            // Actualizar contador
+            currentSlideSpan.textContent = currentSlideIndex + 1;
+            
+            // Actualizar estado de botones
+            prevBtn.disabled = currentSlideIndex === 0;
+            nextBtn.disabled = currentSlideIndex === totalSlides - 1;
+            
+            // Actualizar display del total de slides
+            const totalSlidesSpan = document.getElementById('totalSlides');
+            if (totalSlidesSpan) {
+                totalSlidesSpan.textContent = totalSlides;
+            }
+            
+            // Log para debug
+            console.log(`Slide actual: ${currentSlideIndex + 1}/${totalSlides}`);
+        }
+
+        // Función para avanzar slide
+        function nextSlide() {
+            if (currentSlideIndex < totalSlides - 1) {
+                currentSlideIndex++;
+                updatePresentation();
+            }
+        }
+
+        // Función para retroceder slide
+        function previousSlide() {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                updatePresentation();
+            }
+        }
+
+        // Función para ir a un slide específico
+        function goToSlide(index) {
+            if (index >= 0 && index < totalSlides) {
+                currentSlideIndex = index;
+                updatePresentation();
+            }
+        }
+
+        // Inicialización cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM cargado, inicializando presentación...');
+            
+            // Obtener referencias a los botones
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            // Verificar que los botones existen
+            if (!prevBtn || !nextBtn) {
+                console.error('Botones de navegación no encontrados');
+                return;
+            }
+            
+            // Event listeners para los botones con prevención de eventos múltiples
+            prevBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botón anterior clickeado');
+                previousSlide();
+            });
+            
+            nextBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botón siguiente clickeado');
+                nextSlide();
+            });
+            
+            // Navegación por teclado
+            document.addEventListener('keydown', function(e) {
+                switch(e.key) {
+                    case 'ArrowRight':
+                    case ' ':
+                    case 'PageDown':
+                        e.preventDefault();
+                        nextSlide();
+                        break;
+                    case 'ArrowLeft':
+                    case 'PageUp':
+                        e.preventDefault();
+                        previousSlide();
+                        break;
+                    case 'Home':
+                        e.preventDefault();
+                        goToSlide(0);
+                        break;
+                    case 'End':
+                        e.preventDefault();
+                        goToSlide(totalSlides - 1);
+                        break;
+                    case 'Escape':
+                        // Salir de pantalla completa si está activo
+                        if (document.fullscreenElement) {
+                            document.exitFullscreen();
+                        }
+                        break;
+                }
+            });
+            
+            // Soporte para touch/swipe en móviles
+            let startX = null;
+            let startY = null;
+            let startTime = null;
+            
+            document.addEventListener('touchstart', function(e) {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                startTime = Date.now();
+            }, { passive: true });
+            
+            document.addEventListener('touchend', function(e) {
+                if (startX === null || startY === null) return;
+                
+                const endX = e.changedTouches[0].clientX;
+                const endY = e.changedTouches[0].clientY;
+                const endTime = Date.now();
+                
+                const deltaX = startX - endX;
+                const deltaY = startY - endY;
+                const deltaTime = endTime - startTime;
+                
+                // Solo responder a swipes horizontales rápidos
+                if (Math.abs(deltaX) > Math.abs(deltaY) && 
+                    Math.abs(deltaX) > 50 && 
+                    deltaTime < 300) {
+                    
+                    if (deltaX > 0) {
+                        nextSlide(); // Swipe izquierda (siguiente)
+                    } else {
+                        previousSlide(); // Swipe derecha (anterior)
+                    }
+                }
+                
+                // Reset
+                startX = null;
+                startY = null;
+                startTime = null;
+            }, { passive: true });
+            
+            // Inicializar la presentación
+            updatePresentation();
+            console.log('Presentación inicializada correctamente');
+        });
+
+        // Funciones para exportar control externo (útil para debug)
+        window.presentationControls = {
+            next: nextSlide,
+            previous: previousSlide,
+            goTo: goToSlide,
+            getCurrentInfo: function() {
+                return {
+                    current: currentSlideIndex + 1,
+                    total: totalSlides,
+                    progress: ((currentSlideIndex / (totalSlides - 1)) * 100).toFixed(1) + '%'
+                };
+            }
+        };
+
+        // Log de inicio
+        console.log('Script de presentación cargado');
+        console.log('Controles disponibles en window.presentationControls');
+        console.log('Teclas: ←→ (navegación), Space (siguiente), Home/End (inicio/fin), Esc (salir pantalla completa)');
+    </script>
+</body>
+</html>
